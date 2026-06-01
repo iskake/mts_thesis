@@ -27,7 +27,7 @@ impl ResponseWrapper {
 
 impl Oracle for ResponseWrapper {
     fn ask(&self, _: &str, _: &[char]) -> bool {
-        panic!("Use `ask_i` instead of ask.")
+        panic!("Not implemented: use `ask_i` instead of ask.")
     }
 }
 
@@ -53,8 +53,6 @@ impl StrResponseWrapper {
         let mut map = FxHashMap::with_capacity_and_hasher(size, FxBuildHasher::default());
 
         for s in all_strs_of_len(sigma, k) {
-        // for i in 0..k_and_lower(k, sigma.len()) {
-            // let s = construct_str_at(i, sigma);
             let res = oracle.ask(&s, sigma);
             map.insert(s, res);
         }
@@ -117,7 +115,7 @@ impl IndexOracle for ResponseTable {
 
 impl Oracle for ResponseTable {
     fn ask(&self, _: &str, _: &[char]) -> bool {
-        panic!("Use `ask_i` instead of ask.")
+        panic!("Not implemented: use `ask_i` instead of ask.")
     }
 }
 

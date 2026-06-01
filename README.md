@@ -52,8 +52,8 @@ Each program can be run in the following way:
 Constructed dfa:
 DFA = {
     "start_state": 0,
-    "accepts": {7, 5, 3, 6, 2},
-    "transitions": [[0, 1], [0, 2], [3, 4], [0, 5], [0, 4], [0, 6], [3, 7], [0, 7]],
+    "accepts": {7, 5, 6, 4},
+    "transitions": [[0, 1], [2, 3], [4, 5], [6, 7], [0, 1], [2, 3], [4, 5], [6, 7]],
     "n_states": 8,
 }
 [...]

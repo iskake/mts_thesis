@@ -277,6 +277,29 @@ fn contract_unopt(t: &mut UnoptTree) {
     }
 }
 
+/// Traverse the tree downwards and find all leaf nodes (unopt. tree)
+fn leaf_values_unopt(tree: UnoptTree) -> FxHashSet<usize> {
+    let mut values = FxHashSet::default();
+    let mut to_check = VecDeque::from([tree]);
+
+    'l: while let Some(elem) = to_check.pop_front() {
+        match *elem {
+            UnoptTreePart::Branch(l, _, r) => {
+                to_check.push_back(l);
+                to_check.push_back(r);
+            }
+            UnoptTreePart::Leaf(id) => {
+                if id == usize::MAX {
+                    break 'l;
+                }
+                values.insert(id);
+            }
+            UnoptTreePart::Nothing => {}
+        }
+    }
+    values
+}
+
 #[derive(Debug, PartialEq, Eq, Hash)]
 struct State {
     signature_id: usize,
@@ -380,29 +403,6 @@ pub fn mts_otf_unopt<T: IndexOracle + Oracle>(
     Ok(DFA::new(start_state, accepts, transitions))
 }
 
-/// Traverse the tree downwards and find all leaf nodes (unopt. tree)
-fn leaf_values_unopt(tree: UnoptTree) -> FxHashSet<usize> {
-    let mut values = FxHashSet::default();
-    let mut to_check = VecDeque::from([tree]);
-
-    'l: while let Some(elem) = to_check.pop_front() {
-        match *elem {
-            UnoptTreePart::Branch(l, _, r) => {
-                to_check.push_back(l);
-                to_check.push_back(r);
-            }
-            UnoptTreePart::Leaf(id) => {
-                if id == usize::MAX {
-                    break 'l;
-                }
-                values.insert(id);
-            }
-            UnoptTreePart::Nothing => {}
-        }
-    }
-    values
-}
-
 /***********************************
  *                                 *
  *  OPTIMIZED (all-speedup, etc.)  *
@@ -443,7 +443,6 @@ pub fn mts_naive<T: IndexOracle + Oracle>(
     // The set of "real" states, i.e. the states the actual DFA will contain
     // starting from state 0 and going up
     let mut curr_state = 0;
-    // ? optimization: use `vec![usize::MAX; rows]` to improve speed at cost of memory?
     let mut row_to_state = FxHashMap::default();
 
     // The set of accepting states

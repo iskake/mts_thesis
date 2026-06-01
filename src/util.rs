@@ -216,7 +216,8 @@ impl fmt::Display for UIntN {
     }
 }
 
-/// Get all possible strings of length up to `k` over Sigma^* for the alphabet Sigma.
+/// Get all possible strings of length up to `k` over Sigma^* (in lexicographic order)
+/// for the alphabet Sigma.
 ///
 /// I.e., get all strings $$\{ \lambda \} \cup \bigcup_i=1^k\Sigma^i$$
 pub fn all_strs_of_len(sigma: &[char], k: usize) -> Vec<String> {

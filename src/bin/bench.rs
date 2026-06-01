@@ -29,18 +29,16 @@ fn main() {
     }
 
     enum Lang {
-        L1, // (0+1+...+n)*0^m
-        L2, // ((0+1+...+n)*0)*1^m
-        L3, // { w | w contains m 0's and one 1 }
-        L4, // 1^m
+        L1, // (0+1+...+n)*0^{k-2}
+        L2, // ((0+1+...+n)*0)*1^{k-2}
+        L3, // 1^{k-2}
     }
 
     let lang = match args[1].to_lowercase().as_str() {
         "l_1" => Lang::L1,
         "l_2" => Lang::L2,
-        // "l_3" => Lang::L3,
-        "l_4" => Lang::L4,
-        x => error_exit(&format!("Invalid language selection: expected `l_1`, `l_2`, `l_3`, or `l_4`, got {x}")),
+        "l_3" => Lang::L3,
+        x => error_exit(&format!("Invalid language selection: expected `l_1`, `l_2`, or `l_3`, got {x}")),
     };
 
     let sigma_size: usize = match args[2].parse() {
@@ -90,13 +88,9 @@ fn main() {
     base_regex.push_str(")*");
 
     match lang {
-        Lang::L4 => {
+        Lang::L3 => {
             base_name = format!("$1^X$");
             base_regex = format!("1");
-        }
-        Lang::L3 => {
-            base_name = format!("$\\{{ w \\mid w \\text{{ contains }} X \\text{{ 0's and one }} 1 \\}}");
-            base_regex = format!("l_3,k=");
         }
         Lang::L2 => {
             base_name = format!("$({base_name}0)^*");
@@ -112,23 +106,21 @@ fn main() {
     let name = match lang {
         Lang::L1 => format!("{base_name}0"),
         Lang::L2 => format!("{base_name}1"),
-        Lang::L3 => format!("..."),
-        Lang::L4 => format!("{}", base_name.replace("X", "{1}")),
+        Lang::L3 => format!("{}", base_name.replace("X", "{1}")),
     }; 
     let sigma = base_sigma.clone();
     let k = match lang {
-        Lang::L4 => 3,
+        Lang::L3 => 3,
         _ => 2,
     };
     let regex = match lang {
-        Lang::L4 => String::from("1"),
-        Lang::L3 => String::from("l_3,k=2"),
+        Lang::L3 => String::from("1"),
         Lang::L1 => format!("{base_regex}0"),
         _ => base_regex.clone(),
     };
 
     // From anecdotal evidence
-    let mut iters = match &base_sigma.len() {
+    let iters = match &base_sigma.len() {
         0..=2 => 13,
         3 => 8,
         4 => 7,
@@ -140,20 +132,16 @@ fn main() {
         _ => 4,
     };
 
-    if let Lang::L3 = lang {
-        iters = (iters + 1) / 2;
-    }
-
     println!("regex: {regex}");
     benches.push((name, sigma, k, regex));
 
     let push_sym = match lang {
-        Lang::L2 | Lang::L4 => '1',
+        Lang::L2 | Lang::L3 => '1',
         _ => '0',
     };
 
     let start_iter = match lang {
-        Lang::L4 => 3,
+        Lang::L3 => 3,
         _ => 2,
     };
 
@@ -161,27 +149,19 @@ fn main() {
         let mut suffix = String::with_capacity(i);
 
         let start_i = match lang {
-            Lang::L4 => 3,
+            Lang::L3 => 3,
             Lang::L2 => 2,
             _ => 1,
         };
 
-        match lang {
-            Lang::L3 => (),
-            _ => {
-                for _ in start_i..i {
-                    suffix.push(push_sym);
-                }
-            }
+        for _ in start_i..i {
+            suffix.push(push_sym);
         }
+
         let sigma = base_sigma.clone();
-        let k = if let Lang::L3 = lang {
-            i * 2
-        } else {
-            i
-        };
+        let k = i;
         let name = match lang {
-            Lang::L4 => format!("{}", base_name.replace("X", &format!("{{{}}}", (k - 2)))),
+            Lang::L3 => format!("{}", base_name.replace("X", &format!("{{{}}}", (k - 2)))),
             _ => format!("{base_name}{suffix}$"),
         };
         let regex = format!("{base_regex}{suffix}");
@@ -350,7 +330,6 @@ fn main() {
                 // PRE-SPEEDUP, STRING, STRING INDEX
                 //
                 let before = Instant::now();
-                // let wrapper = util::fa::StrDFA::from((DFA::from((regex.as_ref(), sigma.as_ref())), sigma.as_ref()));
                 let wrapper = StrResponseWrapper::from_oracle(
                     DFA::from((regex.as_ref(), sigma.as_ref())),
                     sigma,
@@ -371,7 +350,6 @@ fn main() {
                 println!("  Index");
 
                 let before = Instant::now();
-                // let table = DFA::from((regex.as_ref(), sigma.as_ref()));
                 let table = ResponseTable::from_idx_oracle(
                     DFA::from((regex.as_ref(), sigma.as_ref())),
                     sigma,
@@ -405,7 +383,7 @@ fn main() {
     run_entire!(run_unopt, run_str, run_str_constr);
 
     let table_path = match lang {
-        Lang::L4 => &format!("{out_dir}table_{base_regex}sigma_siz={}.tex", sigma_size),
+        Lang::L3 => &format!("{out_dir}table_{base_regex}sigma_siz={}.tex", sigma_size),
         _ => &format!("{out_dir}table_{base_regex}0^k.tex"),
     };
 

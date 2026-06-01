@@ -493,7 +493,6 @@ impl NDFA {
                 let u_id;
 
                 if !dstates.contains_key(&u) {
-                    // println!("adding {u} to dstates");
                     unmarked.push_back(u.clone());
 
                     u_id = i;
@@ -501,7 +500,6 @@ impl NDFA {
 
                     dstates.insert(u, u_id);
                 } else {
-                    // println!("{u} already in dstates!");
                     u_id = dstates[&u];
                 }
 
@@ -512,7 +510,6 @@ impl NDFA {
                     let mut v = vec![usize::MAX; sigma.len()];
                     v[char_id] = u_id;
                     transitions.insert(t_id, v);
-                    // transitions.insert(t_id, FxHashMap::from_iter([(*c, u_id)]));
                 }
             }
         }
